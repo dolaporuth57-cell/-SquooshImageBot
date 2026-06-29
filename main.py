@@ -25,34 +25,41 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# 🔥 FIX: Better token handling with debugging
+# 🔥 FIX: Get BOT_TOKEN with better error handling
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-# Debug output to see if token is loaded
-print("=" * 50)
-print(f"BOT_TOKEN loaded: {'Yes' if BOT_TOKEN else 'No'}")
+# Print debug info to Railway logs
+print("=" * 60)
+print("🔍 DEBUG: Checking Environment Variables")
+print("=" * 60)
+print(f"BOT_TOKEN found: {'✅ YES' if BOT_TOKEN else '❌ NO'}")
+
 if BOT_TOKEN:
     print(f"BOT_TOKEN starts with: {BOT_TOKEN[:15]}...")
+    print(f"BOT_TOKEN length: {len(BOT_TOKEN)} characters")
 else:
-    print("⚠️  BOT_TOKEN environment variable is NOT set!")
-    print("Please add it in Railway Variables tab.")
-print("=" * 50)
+    print("\n❌ ERROR: BOT_TOKEN is MISSING!")
+    print("\n📌 To fix this:")
+    print("1. Go to Railway Dashboard")
+    print("2. Click on your project")
+    print("3. Click the 'Variables' tab")
+    print("4. Click 'Add Variable'")
+    print("5. Enter Key: BOT_TOKEN")
+    print("6. Enter Value: Your bot token from @BotFather")
+    print("7. Click 'Add'")
+    print("8. Railway will auto-redeploy")
+print("=" * 60)
 
 if not BOT_TOKEN:
-    # Check if running on Railway by looking for Railway-specific env vars
-    is_railway = os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY_SERVICE_ID")
-    error_msg = (
-        "❌ BOT_TOKEN environment variable is required!\n\n"
-        f"Running on Railway: {'Yes' if is_railway else 'No'}\n\n"
-        "To fix this:\n"
+    raise ValueError(
+        "\n❌ BOT_TOKEN environment variable is required!\n"
+        "\nPlease add it in Railway Variables tab:\n"
         "1. Go to Railway Dashboard\n"
         "2. Click on your project\n"
-        "3. Go to Variables tab\n"
+        "3. Click 'Variables' tab\n"
         "4. Add BOT_TOKEN with your bot token\n"
-        "5. Click Deploy"
+        "5. Click Deploy\n"
     )
-    logger.error(error_msg)
-    raise ValueError("BOT_TOKEN environment variable is required!")
 
 # Initialize bot and dispatcher
 bot = Bot(
@@ -342,7 +349,7 @@ async def handle_unknown(message: Message):
 async def main():
     """Main function to start the bot"""
     logger.info("Starting ImgPixieBot...")
-    logger.info(f"Bot token configured: {BOT_TOKEN[:15]}...")
+    logger.info(f"✅ Bot token loaded: {BOT_TOKEN[:15]}...")
     
     # Clear any existing webhook to avoid conflicts
     try:
