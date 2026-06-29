@@ -25,11 +25,36 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Initialize bot and dispatcher
+# 🔥 FIX: Better token handling with debugging
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+# Debug output to see if token is loaded
+print("=" * 50)
+print(f"BOT_TOKEN loaded: {'Yes' if BOT_TOKEN else 'No'}")
+if BOT_TOKEN:
+    print(f"BOT_TOKEN starts with: {BOT_TOKEN[:15]}...")
+else:
+    print("⚠️  BOT_TOKEN environment variable is NOT set!")
+    print("Please add it in Railway Variables tab.")
+print("=" * 50)
+
 if not BOT_TOKEN:
+    # Check if running on Railway by looking for Railway-specific env vars
+    is_railway = os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY_SERVICE_ID")
+    error_msg = (
+        "❌ BOT_TOKEN environment variable is required!\n\n"
+        f"Running on Railway: {'Yes' if is_railway else 'No'}\n\n"
+        "To fix this:\n"
+        "1. Go to Railway Dashboard\n"
+        "2. Click on your project\n"
+        "3. Go to Variables tab\n"
+        "4. Add BOT_TOKEN with your bot token\n"
+        "5. Click Deploy"
+    )
+    logger.error(error_msg)
     raise ValueError("BOT_TOKEN environment variable is required!")
 
+# Initialize bot and dispatcher
 bot = Bot(
     token=BOT_TOKEN,
     default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN)
@@ -317,18 +342,19 @@ async def handle_unknown(message: Message):
 async def main():
     """Main function to start the bot"""
     logger.info("Starting ImgPixieBot...")
+    logger.info(f"Bot token configured: {BOT_TOKEN[:15]}...")
     
-    # 🔥 FIX: Clear any existing webhook to avoid conflicts
+    # Clear any existing webhook to avoid conflicts
     try:
         await bot.delete_webhook(drop_pending_updates=True)
         logger.info("✅ Webhook cleared successfully")
     except Exception as e:
         logger.warning(f"Could not clear webhook: {e}")
     
-    # Start polling with increased timeout and proper error handling
+    # Start polling
     await dp.start_polling(
         bot,
-        skip_updates=False,  # Process any pending updates
+        skip_updates=False,
         allowed_updates=["message", "callback_query"],
         stop_on_error=True
     )
